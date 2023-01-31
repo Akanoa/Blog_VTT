@@ -1,27 +1,42 @@
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use actix_files::NamedFile;
+use actix_web::{get, App, HttpServer, Responder, Result};
+use std::env;
 
-// Directive de déclaration d'une route "/hello" en verbe GET
-// avec paramètres
-#[get("/hello/{name}/{number}")]
-// Routine de réponses qui accepte un paramètre name de type String
-async fn hello(data: web::Path<(String, u32)>) -> impl Responder {
-    let (name, number) = data.into_inner();
-    // Concaténation avec le paramètre name
-    let body = format!("Hello {name} {number}!\n");
-    // Création de la réponse en 200
-    // avec le body créé
-    HttpResponse::Ok().body(body)
+#[get("/")]
+async fn index() -> Result<impl Responder> {
+    // On récupère le chemin courant
+    let pwd = env::current_dir()?
+        .to_str()
+        // le chemin peut ne pas être de l'UTF-8
+        .expect("Bad UTF-8 string")
+        .to_string();
+    // On récupère les caractères du fichier "index.html"
+    // Cette opération peut échouer si le fichier n'existe pas
+    let file = NamedFile::open(format!("{}/assets/index.html", pwd))?;
+    Ok(file)
 }
 
 // Directive de déclaration du main Actix Web
 #[actix_web::main]
 // Point d'entrée de Actix Web
 async fn main() -> std::io::Result<()> {
+    // On récupère le chemin courant
+    let pwd = env::current_dir()?
+        .to_str()
+        // le chemin peut ne pas être de l'UTF-8
+        .expect("Bad UTF-8 string")
+        .to_string();
+
     // Déclaration du serveur HTTP de réponses
-    HttpServer::new(|| {
+    HttpServer::new(move || {
+        // Définition du chemin vers les fichiers statique
+        let static_path = format!("{}/assets/static", pwd);
+
         App::new()
-            // on enregistre le service "hello"
-            .service(hello)
+            // on enregistre le service "index"
+            .service(index)
+            // on enregistre le service qui sert les fichiers statiques
+            .service(actix_files::Files::new("/static", static_path))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
