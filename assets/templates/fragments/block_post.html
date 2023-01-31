@@ -1,0 +1,12 @@
+{% macro post(post) %}
+<div class="container">
+
+<article>
+    <hgroup>
+        <h3><a href="/post/{{ post.uuid}}">{{ post.title }}</a></h3>
+        <small>de {{ post.author }}</small>
+    </hgroup>
+    {{post.content | truncate(length=200)}}
+</article>
+</div>
+{% endmacro %}

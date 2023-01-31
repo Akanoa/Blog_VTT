@@ -1,6 +1,8 @@
+use crate::models::{Post, User};
 use actix_web::Result;
 use diesel::r2d2::ConnectionManager;
 use diesel::{r2d2, SqliteConnection};
+use serde::Serialize;
 use tera::{Context, Tera};
 
 pub type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
@@ -10,6 +12,25 @@ pub type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 pub struct State {
     pub tera: Tera,
     pub db: DbPool,
+}
+
+#[derive(Serialize)]
+pub struct PostData {
+    pub(crate) uuid: String,
+    pub(crate) title: String,
+    pub(crate) author: String,
+    pub(crate) content: String,
+}
+
+impl From<&(Post, User)> for PostData {
+    fn from((post, user): &(Post, User)) -> Self {
+        PostData {
+            uuid: post.uuid.to_string(),
+            title: post.title.to_string(),
+            author: user.login.to_string(),
+            content: post.content.to_string(),
+        }
+    }
 }
 
 pub fn render_template(tera: &Tera, template_name: &str, context: Context) -> Result<String> {

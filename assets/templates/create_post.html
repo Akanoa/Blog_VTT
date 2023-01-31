@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+    <h3>Nouveau post</h3>
+<form method="post" action="/post" enctype="application/x-www-form-urlencoded">
+    <input type="text" name="title" placeholder="Titre du post" required>
+    <textarea rows="15" placeholder="Contenu" name="content"></textarea>
+    <input type="submit" value="Publier">
+</form>
+
+</div>
+
+
+{% endblock %}

@@ -1,10 +1,12 @@
 use crate::data::{render_template, State};
-use crate::handlers::find_user_by_uuid;
+use crate::handlers::get_all_posts;
+use crate::utils::check_user_connected;
 use actix_identity::Identity;
 use actix_session::Session;
 use actix_web::{get, web, HttpResponse, Responder};
 
 pub mod auth;
+pub mod post;
 
 #[get("/")]
 pub async fn index(
@@ -14,24 +16,13 @@ pub async fn index(
 ) -> actix_web::Result<impl Responder> {
     let mut context = tera::Context::new();
 
-    if let Some(identity) = identity {
-        // On récupère l'utilisateur par son UUID
-        let user = find_user_by_uuid(
-            identity
-                .id()
-                .map_err(actix_web::error::ErrorInternalServerError)?,
-            &state.db,
-        )
-        .await;
+    check_user_connected(identity, &state.db, &mut context, session).await?;
 
-        if let Ok(Some(_user)) = user {
-            context.insert("session_exists", &true);
-        } else {
-            // S'il y a une session mais qu'elle n'est pas reconnue
-            // on la purge
-            session.purge()
-        }
-    }
+    let posts = get_all_posts(&state.db)
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    context.insert("posts", &posts);
 
     // On effectue le rendu du template
     let rendered = render_template(&state.tera, "index.html", context)?;
@@ -63,7 +54,9 @@ pub async fn logout(
     // On effectue le rendu du template
     let rendered = render_template(&state.tera, "index.html", context)?;
     // Sinon le contenu du template rendu
-    Ok(HttpResponse::Ok().body(rendered))
+    Ok(HttpResponse::SeeOther()
+        .append_header(("Location", "/"))
+        .body(rendered))
 }
 
 #[get("/register")]

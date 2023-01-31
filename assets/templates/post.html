@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+    <hgroup>
+        <h3>{{ post.title }}</h3>
+        <small>de {{ post.author }}</small>
+    </hgroup>
+    {{ post.content }}
+
+</div>
+
+{% endblock %}

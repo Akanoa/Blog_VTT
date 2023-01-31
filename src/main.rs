@@ -57,6 +57,9 @@ async fn main() -> std::io::Result<()> {
             .service(routes::register)
             .service(routes::auth::register)
             .service(routes::auth::login)
+            .service(routes::post::new_post)
+            .service(routes::post::publish_post)
+            .service(routes::post::view_post)
             // On enregistre le middleware de gestion d'identité
             .wrap(IdentityMiddleware::default())
             // On enregistre le middleware de gestion de session
