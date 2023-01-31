@@ -1,0 +1,7 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - name: diesel
+    init: >
+      cargo install diesel_cli --no-default-features --features sqlite 
