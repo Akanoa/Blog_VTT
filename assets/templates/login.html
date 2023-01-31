@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container">
+    <article class="grid">
+        <div>
+            <hgroup>
+                <h1>Se connecter</h1>
+                <h2>Pour pouvoir poster du contenu vous devez être connecté(e)</h2>
+            </hgroup>
+            <form action="/login" method="post" enctype="application/x-www-form-urlencoded">
+                {% if bad_password %}
+                <input type="text" name="login" placeholder="Identifiant" aria-label="Identifiant" autocomplete="nickname" required>
+                <input type="password" name="password" placeholder="Mot de passe" aria-label="Password" autocomplete="current-password" required>
+                <small style="color: red">Mauvais mot de passe ou identifiant</small>
+                {% else %}
+                <input type="text" name="login" placeholder="Identifiant" aria-label="Identifiant" autocomplete="nickname" required>
+                <input type="password" name="password" placeholder="Mot de passe" aria-label="Password" autocomplete="current-password" required>
+                {% endif %}
+                <input type="submit" class="contrast" value="Se connecter" />
+                <a href="/register" role="link">Pas encore de compte?</a>
+            </form>
+        </div>
+        <div></div>
+    </article>
+</main>
+{% endblock content %}

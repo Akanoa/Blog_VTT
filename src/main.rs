@@ -1,31 +1,15 @@
-use actix_files::NamedFile;
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
+use actix_identity::IdentityMiddleware;
+use actix_session::storage::CookieSessionStore;
+use actix_session::SessionMiddleware;
 use std::env;
+// Import des différents composants
+use actix_web::cookie::Key;
+use actix_web::{middleware::Logger, web, App, HttpServer};
+use blog_from_scratch::data::State;
+use blog_from_scratch::routes;
+use diesel::r2d2::ConnectionManager;
+use diesel::{r2d2, SqliteConnection};
 use tera::Tera;
-
-#[get("/{name}")]
-async fn index(
-    name: web::Path<String>, /* Permet de récupérer les paramètres de l'URL */
-    state: web::Data<State>, /* Permet de récupérer le state de l'application */
-) -> Result<impl Responder> {
-    // On créé un context Tera permettant le templating
-    let mut context = tera::Context::new();
-    // On configure le contexte pour prendre en valeur le paramètre d'URL
-    context.insert("name", name.as_str());
-    // On effectue le rendu du template
-    let rendered = state
-        .tera
-        .render("hello.html", &context)
-        // Si cela échoue on renvoie une erreur 500 au client
-        .map_err(actix_web::error::ErrorInternalServerError)?;
-    // Sinon le contenu du template rendu
-    Ok(HttpResponse::Ok().body(rendered))
-}
-
-// Déclaration du "state" de l'application
-struct State {
-    tera: Tera,
-}
 
 // Directive de déclaration du main Actix Web
 #[actix_web::main]
@@ -44,26 +28,48 @@ async fn main() -> std::io::Result<()> {
     let tera = Tera::new(&format!("{}/assets/templates/**/*.html", pwd))
         .expect("Unable to load template engine");
 
+    let database_url = format!("{}/database.db", pwd);
+    let manager = ConnectionManager::<SqliteConnection>::new(database_url);
+    let pool = r2d2::Pool::new(manager).expect("Unable to open database pool");
+
+    let secret_key = Key::from(
+        "je suis une clef très secrète et très longue pour être suffisamment sécurisée".as_bytes(),
+    );
+
     // Déclaration du serveur HTTP de réponses
     HttpServer::new(move || {
-        // Définition du chemin vers les fichiers statique
-        let static_path = format!("{}/assets/static", pwd);
-
         // construction de l'état de l'application
         let state = State {
             // on ajoute le moteur de template a notre état d'application
             tera: tera.clone(),
+            db: pool.clone(),
         };
 
+        // Définition du chemin vers les fichiers statique
+        let static_path = format!("{}/assets/static", pwd);
         App::new()
-            // on enregistre le service "index"
-            .service(index)
-            // on enregistre le service qui sert les fichiers statiques
+            // Déclaration du service de fichiers statiques
             .service(actix_files::Files::new("/static", static_path))
-            // Ajout de l'état à l'application
             .app_data(web::Data::new(state))
+            .service(routes::index)
+            .service(routes::login)
+            .service(routes::logout)
+            .service(routes::register)
+            .service(routes::auth::register)
+            .service(routes::auth::login)
+            // On enregistre le middleware de gestion d'identité
+            .wrap(IdentityMiddleware::default())
+            // On enregistre le middleware de gestion de session
+            .wrap(SessionMiddleware::new(
+                CookieSessionStore::default(),
+                secret_key.clone(),
+            ))
+            // On enregistre le logger comme middleware
+            .wrap(Logger::default())
     })
+    // Déclaration du port d'écoute sur le 8080
     .bind(("127.0.0.1", 8080))?
+    // On démarre le serveur
     .run()
     .await
 }

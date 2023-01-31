@@ -1,3 +1,8 @@
 body {
-    background-color: lightcoral;
+    padding: 0 20px 20px 0;
+    /*background-color: #26a185;*/
+}
+
+.blog-title {
+    color: var(--h1-color);
 }

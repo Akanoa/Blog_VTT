@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/pico.min.css">
+  <link rel="stylesheet" href="/static/main.css">
+  <title>Mon Super Blog</title>
+</head>
+<body>
+
+<nav>
+  <ul></ul>
+  <ul>
+    <li>
+      <h1>
+        <a href="/" class="blog-title">Mon Super Blog</a>
+      </h1>
+    </li>
+  </ul>
+  <ul>
+    {% if session_exists %}
+    <li><a href="/logout" class="secondary">Se déconnecter</a></li>
+    {% else %}
+    <li><a href="/login" class="secondary">Se connecter</a></li>
+    {% endif %}
+  </ul>
+</nav>
+  {% block content %}{% endblock content %}
+</body>
+</html>
