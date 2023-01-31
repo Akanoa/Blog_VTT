@@ -1,1 +1,1 @@
-git checkout 5-page-static
+git checkout 6-templating
