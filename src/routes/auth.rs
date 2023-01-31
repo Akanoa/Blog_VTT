@@ -25,12 +25,14 @@ pub async fn register(
 ) -> Result<impl Responder> {
     let mut context = tera::Context::new();
 
-    let mut template = "login.html";
-
     // On vérifie que les mots de passes correspondent
     if form.password != form.password_confirmation {
         context.insert("confirmation_error", &true);
-        template = "register.html"
+
+        // On effectue le rendu du template
+        let rendered = render_template(&state.tera, "register.html", context)?;
+        // Sinon le contenu du template rendu
+        return Ok(HttpResponse::BadRequest().body(rendered));
     }
 
     // On insère l'utilisateur en base de données
@@ -39,10 +41,10 @@ pub async fn register(
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
     // On effectue le rendu du template
-    let rendered = render_template(&state.tera, template, context)?;
+    let rendered = render_template(&state.tera, "login.html", context)?;
     // Sinon le contenu du template rendu
     Ok(HttpResponse::SeeOther()
-        .append_header(("Location", "/"))
+        .append_header(("Location", "/login"))
         .body(rendered))
 }
 
