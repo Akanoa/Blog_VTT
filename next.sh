@@ -1,1 +1,1 @@
-git checkout 7-user-management
+git checkout 8-resources
