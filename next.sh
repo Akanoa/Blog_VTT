@@ -1,1 +1,1 @@
-git checkout 6-templating
+git checkout 7-user-management
