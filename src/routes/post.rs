@@ -73,6 +73,7 @@ pub async fn view_post(state: web::Data<State>, uuid: web::Path<String>) -> Resu
     match post {
         Some(post) => {
             let mut context = Context::new();
+            context.insert("name", &state.name);
             context.insert("post", &post);
             let rendered = render_template(&state.tera, "post.html", context)?;
             // Sinon le contenu du template rendu
