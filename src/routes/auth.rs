@@ -24,6 +24,7 @@ pub async fn register(
     web::Form(form): web::Form<RegisterData>,
 ) -> Result<impl Responder> {
     let mut context = tera::Context::new();
+    context.insert("name", &state.name);
 
     // On vérifie que les mots de passes correspondent
     if form.password != form.password_confirmation {
@@ -55,6 +56,7 @@ pub async fn login(
     request: HttpRequest,
 ) -> Result<impl Responder> {
     let mut context = tera::Context::new();
+    context.insert("name", &state.name);
 
     let mut template = "index.html";
 

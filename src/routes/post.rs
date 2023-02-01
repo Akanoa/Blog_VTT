@@ -25,6 +25,7 @@ pub async fn new_post(
     session: Session,
 ) -> Result<impl Responder> {
     let mut context = tera::Context::new();
+    context.insert("name", &state.name);
 
     check_user_connected(identity, &state.db, &mut context, session).await?;
 
