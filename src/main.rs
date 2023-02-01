@@ -2,6 +2,7 @@ use actix_identity::IdentityMiddleware;
 use actix_session::storage::CookieSessionStore;
 use actix_session::SessionMiddleware;
 use std::env;
+
 // Import des différents composants
 use actix_web::cookie::Key;
 use actix_web::{middleware::Logger, web, App, HttpServer};
@@ -10,7 +11,10 @@ use blog_from_scratch::data::State;
 use blog_from_scratch::routes;
 use diesel::r2d2::ConnectionManager;
 use diesel::{r2d2, SqliteConnection};
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use tera::Tera;
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
 // Directive de déclaration du main Actix Web
 #[actix_web::main]
@@ -36,6 +40,14 @@ async fn main() -> std::io::Result<()> {
 
     let manager = ConnectionManager::<SqliteConnection>::new(config.database_path);
     let pool = r2d2::Pool::new(manager).expect("Unable to open database pool");
+
+    let mut connection = pool
+        .get()
+        .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))?;
+
+    connection
+        .run_pending_migrations(MIGRATIONS)
+        .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))?;
 
     let secret_key = Key::from(config.session_key.as_bytes());
 
