@@ -15,3 +15,4 @@ serde = { version = "1.0.152", features = ["derive"] }
 uuid = { version = "1.2.2", features = ["v4"] }
 pwhash = "1.0.0"
 tera = "1.17.1"
+figment = { version = "0.10.8", features = ["toml", "env"] }

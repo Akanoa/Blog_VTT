@@ -5,6 +5,7 @@ use std::env;
 // Import des différents composants
 use actix_web::cookie::Key;
 use actix_web::{middleware::Logger, web, App, HttpServer};
+use blog_from_scratch::config::get_configuration;
 use blog_from_scratch::data::State;
 use blog_from_scratch::routes;
 use diesel::r2d2::ConnectionManager;
@@ -15,26 +16,28 @@ use tera::Tera;
 #[actix_web::main]
 // Point d'entrée de Actix Web
 async fn main() -> std::io::Result<()> {
-    // On récupère le chemin courant
-    let pwd = env::current_dir()?
-        .to_str()
-        // le chemin peut ne pas être de l'UTF-8
-        .expect("Bad UTF-8 string")
-        .to_string();
+    let args: Vec<String> = env::args().collect();
+
+    let config = get_configuration(args.get(1)).map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("Bad configuration: {}", e.to_string()),
+        )
+    })?;
 
     // Création et configuration du moteur de template Tera
     // tous les fichiers html dans le dossiers templates et ses enfants sont
     // utilisables lors du rendu
-    let tera = Tera::new(&format!("{}/assets/templates/**/*.html", pwd))
-        .expect("Unable to load template engine");
+    let tera = Tera::new(&format!(
+        "{}/assets/templates/**/*.html",
+        config.working_directory
+    ))
+    .expect("Unable to load template engine");
 
-    let database_url = format!("{}/database.db", pwd);
-    let manager = ConnectionManager::<SqliteConnection>::new(database_url);
+    let manager = ConnectionManager::<SqliteConnection>::new(config.database_path);
     let pool = r2d2::Pool::new(manager).expect("Unable to open database pool");
 
-    let secret_key = Key::from(
-        "je suis une clef très secrète et très longue pour être suffisamment sécurisée".as_bytes(),
-    );
+    let secret_key = Key::from(config.session_key.as_bytes());
 
     // Déclaration du serveur HTTP de réponses
     HttpServer::new(move || {
@@ -46,7 +49,7 @@ async fn main() -> std::io::Result<()> {
         };
 
         // Définition du chemin vers les fichiers statique
-        let static_path = format!("{}/assets/static", pwd);
+        let static_path = format!("{}/assets/static", config.working_directory);
         App::new()
             // Déclaration du service de fichiers statiques
             .service(actix_files::Files::new("/static", static_path))
