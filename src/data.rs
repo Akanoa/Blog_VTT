@@ -1,3 +1,4 @@
+use crate::config::Config;
 use crate::models::{Post, User};
 use actix_web::Result;
 use diesel::r2d2::ConnectionManager;
@@ -12,6 +13,7 @@ pub type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 pub struct State {
     pub tera: Tera,
     pub db: DbPool,
+    pub name: String,
 }
 
 #[derive(Serialize)]

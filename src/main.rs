@@ -25,7 +25,7 @@ async fn main() -> std::io::Result<()> {
     let config = get_configuration(args.get(1)).map_err(|e| {
         std::io::Error::new(
             std::io::ErrorKind::Other,
-            format!("Bad configuration: {}", e.to_string()),
+            format!("Bad configuration: {}", e),
         )
     })?;
 
@@ -58,6 +58,7 @@ async fn main() -> std::io::Result<()> {
             // on ajoute le moteur de template a notre état d'application
             tera: tera.clone(),
             db: pool.clone(),
+            name: config.name.clone(),
         };
 
         // Définition du chemin vers les fichiers statique

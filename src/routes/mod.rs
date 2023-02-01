@@ -22,6 +22,7 @@ pub async fn index(
         .await
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
+    context.insert("name", &state.name);
     context.insert("posts", &posts);
 
     // On effectue le rendu du template
@@ -32,7 +33,8 @@ pub async fn index(
 
 #[get("/login")]
 pub async fn login(state: web::Data<State>) -> actix_web::Result<impl Responder> {
-    let context = tera::Context::new();
+    let mut context = tera::Context::new();
+    context.insert("name", &state.name);
     // On effectue le rendu du template
     let rendered = render_template(&state.tera, "login.html", context)?;
     // Sinon le contenu du template rendu
@@ -44,7 +46,8 @@ pub async fn logout(
     identity: Option<Identity>,
     state: web::Data<State>,
 ) -> actix_web::Result<impl Responder> {
-    let context = tera::Context::new();
+    let mut context = tera::Context::new();
+    context.insert("name", &state.name);
 
     // Déconnexion
     if let Some(user) = identity {
@@ -61,7 +64,8 @@ pub async fn logout(
 
 #[get("/register")]
 pub async fn register(state: web::Data<State>) -> actix_web::Result<impl Responder> {
-    let context = tera::Context::new();
+    let mut context = tera::Context::new();
+    context.insert("name", &state.name);
     // On effectue le rendu du template
     let rendered = render_template(&state.tera, "register.html", context)?;
     // Sinon le contenu du template rendu
